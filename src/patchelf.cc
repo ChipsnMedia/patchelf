@@ -1253,6 +1253,42 @@ void ElfFile<ElfFileParamNames>::modifyOsAbi(osAbiMode op, const std::string & n
 }
 
 template<ElfFileParams>
+void ElfFile<ElfFileParamNames>::modifyProgramHeader(bool setPflagPF_MASKOS, bool setLoadAddr, Elf32_Addr newLoadAddr)
+{
+    Elf32_Addr addrP = newLoadAddr;
+    Elf32_Addr addrV = newLoadAddr;
+
+    for (unsigned int i = 0; i < phdrs.size(); ++i)
+    {
+        Elf_Phdr *pPhdr = ((Elf_Phdr *) (fileContents->data() + rdi(hdr()->e_phoff)) + i);
+        Elf_Phdr phdr = phdrs.at(i);
+        if (setPflagPF_MASKOS)
+        {
+            if (i == 0)
+            {
+                wri(phdr.p_flags, PF_MASKOS);
+            }
+        }
+        if (setLoadAddr)
+        {
+            wri(phdr.p_paddr, addrP);
+            wri(phdr.p_vaddr, addrV);
+
+            addrP = addrP + phdr.p_filesz;
+            addrV = addrV + phdr.p_filesz;
+        }
+        *pPhdr = phdr;
+    }
+
+    if (setLoadAddr)
+    {
+        hdr()->e_entry = newLoadAddr;
+    }
+    changed = true;
+}
+
+
+template<ElfFileParams>
 void ElfFile<ElfFileParamNames>::modifySoname(sonameMode op, const std::string & newSoname)
 {
     if (rdi(hdr()->e_type) != ET_DYN) {
@@ -1889,6 +1925,9 @@ void ElfFile<ElfFileParamNames>::clearSymbolVersions(const std::set<std::string>
 
 static bool printInterpreter = false;
 static bool printOsAbi = false;
+static bool setPflagPF_MASKOS = false;
+static bool setLoadAddr = false;
+static Elf32_Addr newLoadAddr;
 static bool setOsAbi = false;
 static std::string newOsAbi;
 static bool printSoname = false;
@@ -1915,6 +1954,9 @@ static void patchElf2(ElfFile && elfFile, const FileContents & fileContents, con
 {
     if (printInterpreter)
         printf("%s\n", elfFile.getInterpreter().c_str());
+
+    if (setPflagPF_MASKOS || setLoadAddr)
+        elfFile.modifyProgramHeader(setPflagPF_MASKOS, setLoadAddr, newLoadAddr);
 
     if (printOsAbi)
         elfFile.modifyOsAbi(elfFile.printOsAbi, "");
@@ -2050,6 +2092,14 @@ int mainWrapped(int argc, char * * argv)
         }
         else if (arg == "--print-os-abi") {
             printOsAbi = true;
+        }
+        else if (arg == "--set-p_flags-PF_MASKOS") {
+            setPflagPF_MASKOS = true;
+        }
+        else if (arg == "--set-load-addr32") {
+            if (++i == argc) error("missing argument");
+            setLoadAddr = true;
+            newLoadAddr = (Elf32_Addr)strtoul(argv[i], NULL, 16);
         }
         else if (arg == "--set-os-abi") {
             if (++i == argc) error("missing argument");
