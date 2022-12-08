@@ -1264,10 +1264,7 @@ void ElfFile<ElfFileParamNames>::modifyProgramHeader(bool setPflagPF_MASKOS, boo
         Elf_Phdr phdr = phdrs.at(i);
         if (setPflagPF_MASKOS)
         {
-            if (i == 0)
-            {
-                wri(phdr.p_flags, PF_MASKOS);
-            }
+            wri(phdr.p_flags, PF_MASKOS);
         }
         if (setLoadAddr)
         {
