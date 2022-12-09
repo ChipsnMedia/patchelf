@@ -67,7 +67,18 @@ libraries.  In particular, it can do the following:
   $ patchelf --set-soname libnewname.so.3.4.5 path/to/libmylibrary.so.1.2.3
   ```
 
+* Change pflag in program header to PF_MASKOS :
 
+  ```console
+  $ patchelf --set-p_flags-PF_MASKOS my-program
+  ```
+  
+* Change LOAD address in program header to an address for 32bit ELF only:
+
+  ```console
+  $ patchelf --set-load-addr32 0x80000000 my-program
+  ```
+  
 ## Compiling and Testing
 
 ### Via Autotools
