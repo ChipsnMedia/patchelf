@@ -14,9 +14,11 @@
                 "--set-p_flags-PF_MASKOS",
                 "--set-load-addr32", 
                 "0x8e900000",
+                "--set-load2-size", 
+                "0x500000",
                 "/Stream/work/gregory/seurat.elf", 
                 "--output", 
-                "/Stream/work/gregory/seurat_8e900000_PF_MASKOS.elf"
+                "/Stream/work/gregory/seurat_8e900000_PF_MASKOS_500000.elf"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/src",

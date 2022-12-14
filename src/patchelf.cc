@@ -1253,7 +1253,7 @@ void ElfFile<ElfFileParamNames>::modifyOsAbi(osAbiMode op, const std::string & n
 }
 
 template<ElfFileParams>
-void ElfFile<ElfFileParamNames>::modifyProgramHeader(bool setPflagPF_MASKOS, bool setLoadAddr, Elf32_Addr newLoadAddr)
+void ElfFile<ElfFileParamNames>::modifyProgramHeader(bool setPflagPF_MASKOS, bool setLoadAddr, Elf32_Addr newLoadAddr, bool setLoad2Size, int newLoad2Size)
 {
     Elf32_Addr addrP = newLoadAddr;
     Elf32_Addr addrV = newLoadAddr;
@@ -1273,6 +1273,13 @@ void ElfFile<ElfFileParamNames>::modifyProgramHeader(bool setPflagPF_MASKOS, boo
 
             addrP = addrP + phdr.p_filesz;
             addrV = addrV + phdr.p_filesz;
+        }
+        if (setLoad2Size)
+        {
+            if (i == 1)
+            {
+                wri(phdr.p_filesz, wri(phdr.p_memsz, newLoad2Size));
+            }
         }
         *pPhdr = phdr;
     }
@@ -1925,6 +1932,8 @@ static bool printOsAbi = false;
 static bool setPflagPF_MASKOS = false;
 static bool setLoadAddr = false;
 static Elf32_Addr newLoadAddr;
+static bool setLoad2Size = false;
+static int newLoad2Size;
 static bool setOsAbi = false;
 static std::string newOsAbi;
 static bool printSoname = false;
@@ -1952,8 +1961,8 @@ static void patchElf2(ElfFile && elfFile, const FileContents & fileContents, con
     if (printInterpreter)
         printf("%s\n", elfFile.getInterpreter().c_str());
 
-    if (setPflagPF_MASKOS || setLoadAddr)
-        elfFile.modifyProgramHeader(setPflagPF_MASKOS, setLoadAddr, newLoadAddr);
+    if (setPflagPF_MASKOS || setLoadAddr || setLoad2Size)
+        elfFile.modifyProgramHeader(setPflagPF_MASKOS, setLoadAddr, newLoadAddr, setLoad2Size, newLoad2Size);
 
     if (printOsAbi)
         elfFile.modifyOsAbi(elfFile.printOsAbi, "");
@@ -2097,6 +2106,11 @@ int mainWrapped(int argc, char * * argv)
             if (++i == argc) error("missing argument");
             setLoadAddr = true;
             newLoadAddr = (Elf32_Addr)strtoul(argv[i], NULL, 16);
+        }
+        else if (arg == "--set-load2-size") {
+            if (++i == argc) error("missing argument");
+            setLoad2Size = true;
+            newLoad2Size = (int)strtoul(argv[i], NULL, 16);
         }
         else if (arg == "--set-os-abi") {
             if (++i == argc) error("missing argument");
