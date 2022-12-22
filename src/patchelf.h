@@ -112,7 +112,7 @@ public:
     typedef enum { printOsAbi, replaceOsAbi } osAbiMode;
 
     void modifyOsAbi(osAbiMode op, const std::string & newOsAbi);
-    void modifyProgramHeader(bool setPflagPF_MASKOS, bool setLoadAddr, Elf32_Addr newLoadAddr, bool setLoad2Size, int newLoad2Size);
+    void modifyProgramHeader(bool oringPflagPF, uint32_t newPflag, bool setLoadAddr, Elf32_Addr newLoadAddr);
     typedef enum { printSoname, replaceSoname } sonameMode;
 
     void modifySoname(sonameMode op, const std::string & newSoname);
